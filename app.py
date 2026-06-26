@@ -761,20 +761,7 @@ with st.sidebar:
 
     PAGE_OPTIONS = ["🏠  Overview", "🔬  Yield Predictor", "⚙️  Optimizer", "📊  Visualizations", "📋  Model Info"]
 
-    # Custom styled nav
-    for opt in PAGE_OPTIONS:
-        is_active = st.session_state.get("page") == opt
-        bg    = "rgba(0,229,204,0.07)" if is_active else "transparent"
-        color = "#00e5cc" if is_active else "#8fb8b3"
-        bar   = "3px solid #00e5cc" if is_active else "3px solid transparent"
-        st.markdown(f"""
-        <div style='border-left:{bar}; background:{bg}; padding:0.48rem 0.8rem;
-                    font-family:"IBM Plex Mono",monospace; font-size:0.82rem;
-                    color:{color}; cursor:pointer; transition:all 0.18s;
-                    margin-bottom:2px; border-radius:0 2px 2px 0;'>
-            {opt}
-        </div>
-        """, unsafe_allow_html=True)
+    # Navigation is handled by the radio buttons below
 
     page = st.radio(
         "Navigation",
@@ -1437,10 +1424,12 @@ elif page == "📋  Model Info":
             inv_mae = 1 / (mvals["MAE"] + 1e-6)
             inv_rmse= 1 / (mvals["RMSE"] + 1e-6)
             r = [r2_n, inv_mae / 0.35, inv_rmse / 0.35]
+            hex_c = colors_r[i].lstrip('#')
+            fill_c = f"rgba({int(hex_c[0:2],16)}, {int(hex_c[2:4],16)}, {int(hex_c[4:6],16)}, 0.1)"
             fig_radar.add_trace(go.Scatterpolar(
                 r=r + [r[0]], theta=categories + [categories[0]],
                 name=mname, line=dict(color=colors_r[i], width=2),
-                fill="toself", fillcolor=colors_r[i] + "1a",
+                fill="toself", fillcolor=fill_c,
             ))
         fig_radar.update_layout(
             polar=dict(
