@@ -4,7 +4,7 @@ optimizer.py
 Phase 3 – Fermentation Optimization Engine
 
 Uses scipy's Differential Evolution and a Randomized Search fallback to find
-the input conditions that MAXIMIZE predicted fermentation Yield, as determined
+the input conditions that MAXIMIZE predicted fermentation Ethanol, as determined
 by the trained Random Forest pipeline stored in fermentation_pipeline.pkl.
 
 Usage (CLI):
@@ -29,7 +29,7 @@ matplotlib.use("Agg")          # non-interactive backend (safe for servers)
 import matplotlib.pyplot as plt
 from scipy.optimize import differential_evolution
 
-warnings.filterwarnings("ignore")
+# warnings.filterwarnings("ignore")
 
 PIPELINE_PATH = Path(__file__).parent / "fermentation_pipeline.pkl"
 
@@ -214,7 +214,7 @@ def run_optimisation(
     Core optimisation routine.
 
     Returns a dict with:
-        baseline_yield, optimised_yield, improvement_pct,
+        baseline_ethanol, optimised_ethanol, improvement_pct,
         baseline_params, optimised_params, history
     """
     mappings      = pipeline["mappings"]
@@ -253,7 +253,7 @@ def run_optimisation(
         baseline_vec_num, opt_num_cols, fixed_cats, feature_cols
     )
     baseline_scaled  = scaler.transform(baseline_full.reshape(1, -1))
-    baseline_yield   = model.predict(baseline_scaled)[0]
+    baseline_ethanol   = model.predict(baseline_scaled)[0]
 
     if verbose:
         print(f"\n{'='*60}")
@@ -262,7 +262,7 @@ def run_optimisation(
         print(f"  Substrate: {substrate}")
         print(f"  Country  : {country}")
         print(f"{'='*60}")
-        print(f"\nBaseline Yield (median conditions): {baseline_yield:.4f}")
+        print(f"\nBaseline Ethanol Yield Yield (mM) (median conditions): {baseline_ethanol:.4f}")
         print(f"Running Differential Evolution ({maxiter} iterations, popsize={popsize})...")
 
     history = []
@@ -285,32 +285,32 @@ def run_optimisation(
     )
 
     best_x_de    = result.x
-    best_yield_de = -result.fun
+    best_ethanol_de = -result.fun
 
     # ── Randomised Search (cross-check) ─────────────────────────────────────
     if verbose:
         print("Running Randomised Search cross-check (5 000 samples)...")
     best_x_rs, best_neg_rs = randomised_search(objective, bounds, n_iter=5000, seed=seed + 1)
-    best_yield_rs = -best_neg_rs
+    best_ethanol_rs = -best_neg_rs
 
     # Pick whichever found the higher yield
-    if best_yield_rs > best_yield_de:
+    if best_ethanol_rs > best_ethanol_de:
         best_x     = best_x_rs
-        best_yield = best_yield_rs
+        best_ethanol = best_ethanol_rs
         method_used = "Randomised Search"
     else:
         best_x     = best_x_de
-        best_yield = best_yield_de
+        best_ethanol = best_ethanol_de
         method_used = "Differential Evolution"
 
     if verbose:
         print(f"\nBest method : {method_used}")
-        print(f"Optimised Yield: {best_yield:.4f}  (baseline: {baseline_yield:.4f})")
+        print(f"Optimised Ethanol Yield Yield (mM): {best_ethanol:.4f}  (baseline: {baseline_ethanol:.4f})")
 
     # ── Build result dicts ───────────────────────────────────────────────────
     baseline_params   = dict(zip(opt_num_cols, baseline_vec_num.tolist()))
     optimised_params  = dict(zip(opt_num_cols, best_x.tolist()))
-    improvement_pct   = ((best_yield - baseline_yield) / (abs(baseline_yield) + 1e-9)) * 100
+    improvement_pct   = ((best_ethanol - baseline_ethanol) / (abs(baseline_ethanol) + 1e-9)) * 100
 
     if verbose:
         print(f"Improvement : {improvement_pct:+.2f}%")
@@ -319,8 +319,8 @@ def run_optimisation(
         print_comparison_table(baseline_params, optimised_params, core_cols, UNITS)
 
     return {
-        "baseline_yield":    baseline_yield,
-        "optimised_yield":   best_yield,
+        "baseline_ethanol":    baseline_ethanol,
+        "optimised_ethanol":   best_ethanol,
         "improvement_pct":   improvement_pct,
         "method_used":       method_used,
         "baseline_params":   baseline_params,
@@ -344,9 +344,9 @@ def save_results(results: dict, out_dir: Path = Path(".")):
         })
     df_out = pd.DataFrame(rows)
     df_out.loc[len(df_out)] = {
-        "Parameter": "Predicted_Yield",
-        "Baseline":  round(results["baseline_yield"], 6),
-        "Optimised": round(results["optimised_yield"], 6),
+        "Parameter": "Predicted_Ethanol_mM",
+        "Baseline":  round(results["baseline_ethanol"], 6),
+        "Optimised": round(results["optimised_ethanol"], 6),
         "Unit":      "g/L or %",
     }
     csv_path = out_dir / "optimisation_results.csv"
@@ -367,21 +367,21 @@ def save_results(results: dict, out_dir: Path = Path(".")):
         axes[0].plot([-v for v in history], alpha=0.4, color="steelblue", linewidth=0.8)
         axes[0].set_title("All Evaluations")
         axes[0].set_xlabel("Evaluation #")
-        axes[0].set_ylabel("Predicted Yield")
+        axes[0].set_ylabel("Predicted Ethanol Yield (mM)")
 
         # Right: cumulative best
         axes[1].plot(cumulative_yield, color="darkorange", linewidth=2)
         axes[1].axhline(
-            results["baseline_yield"], linestyle="--",
-            color="grey", label=f"Baseline ({results['baseline_yield']:.4f})"
+            results["baseline_ethanol"], linestyle="--",
+            color="grey", label=f"Baseline ({results['baseline_ethanol']:.4f})"
         )
         axes[1].axhline(
-            results["optimised_yield"], linestyle="-.",
-            color="green", label=f"Optimised ({results['optimised_yield']:.4f})"
+            results["optimised_ethanol"], linestyle="-.",
+            color="green", label=f"Optimised ({results['optimised_ethanol']:.4f})"
         )
         axes[1].set_title("Cumulative Best Yield")
         axes[1].set_xlabel("Evaluation #")
-        axes[1].set_ylabel("Predicted Yield")
+        axes[1].set_ylabel("Predicted Ethanol Yield (mM)")
         axes[1].legend()
 
         plt.tight_layout()
@@ -393,7 +393,7 @@ def save_results(results: dict, out_dir: Path = Path(".")):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Fermentation Yield Optimisation Engine"
+        description="Fermentation Ethanol Optimisation Engine"
     )
     parser.add_argument(
         "--strain", default="Clostridium strain AK1",
@@ -440,11 +440,13 @@ def main():
     save_results(results, out_dir=out_dir)
 
     print("\n[DONE] Optimisation complete.")
-    print(f"  Baseline Yield   : {results['baseline_yield']:.4f}")
-    print(f"  Optimised Yield  : {results['optimised_yield']:.4f}")
+    print(f"  Baseline Ethanol Yield Yield (mM)   : {results['baseline_ethanol']:.4f}")
+    print(f"  Optimised Ethanol Yield Yield (mM)  : {results['optimised_ethanol']:.4f}")
     print(f"  Improvement      : {results['improvement_pct']:+.2f}%")
     print(f"  Method           : {results['method_used']}")
 
 
 if __name__ == "__main__":
     main()
+
+

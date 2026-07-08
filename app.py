@@ -1,5 +1,5 @@
 """
-app.py  –  FermentAI · AI Fermentation Yield Prediction & Optimization Dashboard
+app.py  –  FermentAI · AI Fermentation Ethanol Yield Prediction & Optimization Dashboard
 ==================================================================================
 Run with:
     streamlit run app.py
@@ -19,7 +19,7 @@ import plotly.graph_objects as go
 import streamlit as st
 from scipy.optimize import differential_evolution
 
-warnings.filterwarnings("ignore")
+# warnings.filterwarnings("ignore")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Page Configuration
@@ -685,7 +685,7 @@ def encode_row(row: dict) -> np.ndarray:
     return SCALER.transform(vec.reshape(1, -1))
 
 
-def predict_yield(row: dict) -> float:
+def predict_ethanol(row: dict) -> float:
     return float(MODEL.predict(encode_row(row))[0])
 
 
@@ -708,34 +708,15 @@ def gauge_svg(value: float, max_val: float = 50.0) -> str:
     circumference = 2 * 3.14159 * radius
     offset  = circumference * (1 - pct)
     color   = "#00e5cc"
-    return f"""
-    <div style="display:flex;flex-direction:column;align-items:center;">
-      <svg width="180" height="180" viewBox="0 0 180 180">
-        <!-- Track -->
-        <circle cx="{cx}" cy="{cy}" r="{radius}"
-          fill="none" stroke="#1b2a47" stroke-width="8"/>
-        <!-- Arc -->
-        <circle cx="{cx}" cy="{cy}" r="{radius}"
-          fill="none" stroke="{color}" stroke-width="8"
-          stroke-linecap="round"
-          stroke-dasharray="{circumference:.1f}"
-          stroke-dashoffset="{offset:.1f}"
-          transform="rotate(-90 {cx} {cy})"
-          style="transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1);">
-        </circle>
-        <!-- Value -->
-        <text x="{cx}" y="{cy - 6}" text-anchor="middle"
-          font-family="'Bebas Neue', sans-serif"
-          font-size="34" fill="#e2f3f0" letter-spacing="1">{value:.2f}</text>
-        <text x="{cx}" y="{cy + 16}" text-anchor="middle"
-          font-family="'IBM Plex Mono', monospace"
-          font-size="10" fill="#8fb8b3" letter-spacing="2">g/L or %</text>
-        <text x="{cx}" y="{cy + 30}" text-anchor="middle"
-          font-family="'IBM Plex Mono', monospace"
-          font-size="9" fill="#00e5cc">{pct*100:.1f}% of range</text>
-      </svg>
-    </div>
-    """
+    return f"""<div style="display:flex;flex-direction:column;align-items:center;">
+<svg width="180" height="180" viewBox="0 0 180 180">
+  <circle cx="{cx}" cy="{cy}" r="{radius}" fill="none" stroke="#1b2a47" stroke-width="8"/>
+  <circle cx="{cx}" cy="{cy}" r="{radius}" fill="none" stroke="{color}" stroke-width="8" stroke-linecap="round" stroke-dasharray="{circumference:.1f}" stroke-dashoffset="{offset:.1f}" transform="rotate(-90 {cx} {cy})" style="transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1);"></circle>
+  <text x="{cx}" y="{cy - 6}" text-anchor="middle" font-family="'Bebas Neue', sans-serif" font-size="34" fill="#e2f3f0" letter-spacing="1">{value:.2f}</text>
+  <text x="{cx}" y="{cy + 16}" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="10" fill="#8fb8b3" letter-spacing="2">g/L or %</text>
+  <text x="{cx}" y="{cy + 30}" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="9" fill="#00e5cc">{pct*100:.1f}% of range</text>
+</svg>
+</div>"""
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -759,7 +740,7 @@ with st.sidebar:
     if "page" not in st.session_state:
         st.session_state["page"] = "🏠  Overview"
 
-    PAGE_OPTIONS = ["🏠  Overview", "🔬  Yield Predictor", "⚙️  Optimizer", "📊  Visualizations", "📋  Model Info"]
+    PAGE_OPTIONS = ["🏠  Overview", "🔬  Ethanol Yield Predictor", "⚙️  Optimizer", "📊  Visualizations", "📋  Model Info"]
 
     # Navigation is handled by the radio buttons below
 
@@ -806,7 +787,7 @@ with st.sidebar:
 # PAGE 1 – Overview
 # ─────────────────────────────────────────────────────────────────────────────
 if page == "🏠  Overview":
-    st.markdown('<div class="section-header fade-1">AI Fermentation Yield Prediction</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header fade-1">AI Fermentation Ethanol Yield Prediction</div>', unsafe_allow_html=True)
     st.markdown('<div class="section-underline"></div>', unsafe_allow_html=True)
     st.markdown('<div class="section-sub fade-2">machine learning platform · industrial biotechnology · yield optimization</div>', unsafe_allow_html=True)
 
@@ -815,7 +796,7 @@ if page == "🏠  Overview":
         ("Best R² Score",    f"{METRICS[BEST_NAME]['R2']:.4f}", BEST_NAME, "fade-1"),
         ("Lowest RMSE",      f"{METRICS[BEST_NAME]['RMSE']:.3f}", "g/L or %", "fade-2"),
         ("Feature Count",    str(len(FEAT_COLS)), "lab + macro variables", "fade-3"),
-        ("Yield Improvement","+34.6%", "via differential evolution", "fade-4"),
+        ("Ethanol Improvement","+702.9%", "via differential evolution", "fade-4"),
     ]
     for col, (label, val, sub, fade) in zip([c1, c2, c3, c4], cards):
         with col:
@@ -840,11 +821,11 @@ if page == "🏠  Overview":
         """, unsafe_allow_html=True)
 
         steps = [
-            ("🔬", "Raw Data",       "clostridium AK1 + bioethanol datasets",     None),
+            ("🔬", "Raw Data",       "clostridium AK1 + 231 yeast strains + bioethanol datasets", None),
             ("🧹", "Cleaning",       "IQR outlier removal · LOD handling · merge", None),
             ("⚙️", "Preprocessing",  "StandardScaler + LabelEncoder pipeline",     "📋  Model Info"),
             ("🤖", "ML Models",      "Linear Reg · Random Forest · XGBoost",       "📋  Model Info"),
-            ("📈", "Prediction",     "fermentation yield estimation",              "🔬  Yield Predictor"),
+            ("📈", "Prediction",     "fermentation ethanol yield estimation",              "🔬  Ethanol Yield Predictor"),
             ("🎯", "Optimization",   "differential evolution · global search",     "⚙️  Optimizer"),
             ("📊", "Visualizations", "feature importance · distribution charts",  "📊  Visualizations"),
         ]
@@ -921,21 +902,22 @@ if page == "🏠  Overview":
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# PAGE 2 – Yield Predictor
+# PAGE 2 – Ethanol Yield Predictor
 # ─────────────────────────────────────────────────────────────────────────────
-elif page == "🔬  Yield Predictor":
-    st.markdown('<div class="section-header fade-1">Fermentation Yield Predictor</div>', unsafe_allow_html=True)
+elif page == "🔬  Ethanol Yield Predictor":
+    st.markdown('<div class="section-header fade-1">Fermentation Ethanol Yield Predictor</div>', unsafe_allow_html=True)
     st.markdown('<div class="section-underline"></div>', unsafe_allow_html=True)
     st.markdown('<div class="section-sub fade-2">adjust process parameters · predict fermentation yield · real-time inference</div>', unsafe_allow_html=True)
 
-    tab_lab, tab_macro = st.tabs(["[🧫] Lab Parameters — Clostridium AK1", "[🌍] Macro / Country Parameters"])
+    tab_lab, tab_macro = st.tabs(["[🧫] Lab Parameters", "[🌍] Macro / Country Parameters"])
 
     with tab_lab:
         st.markdown("<br>", unsafe_allow_html=True)
         c1, c2, c3 = st.columns(3)
 
         with c1:
-            substrate = st.selectbox("Substrate", ["D-Glucose", "Control", "L-Fucose", "L-Rhamnose"], index=0)
+            strain    = st.selectbox("Microbial Strain", list(MAPPINGS["Microbial_Strain"].keys()), index=0)
+            substrate = st.selectbox("Substrate", list(MAPPINGS["Substrate"].keys()), index=0)
             temp      = st.slider("Temperature (°C)", 20.0, 80.0, float(MEDIANS.get("Temperature_C", 37.0)), 0.5)
             init_ph   = st.slider("Initial pH", 3.0, 9.0, float(MEDIANS.get("Initial_pH", 6.5)), 0.1)
             final_ph  = st.slider("Final pH", 3.0, 9.0, float(MEDIANS.get("Final_pH", 5.8)), 0.1)
@@ -947,7 +929,6 @@ elif page == "🔬  Yield Predictor":
             od600     = st.slider("OD600 (Optical Density)", 0.01, 5.0, float(MEDIANS.get("OD600", 0.15)), 0.01)
 
         with c3:
-            ethanol   = st.slider("Ethanol (mM)", 0.0, 100.0, float(MEDIANS.get("Ethanol_mM", 3.61)), 0.1)
             acetate   = st.slider("Acetate (mM)", 0.0, 100.0, float(MEDIANS.get("Acetate_mM", 4.48)), 0.1)
             butyrate  = st.slider("Butyrate (mM)", 0.0, 50.0, float(MEDIANS.get("Butyrate_mM", 0.2)), 0.05)
             lactate   = st.slider("Lactate (mM)", 0.0, 100.0, float(MEDIANS.get("Lactate_mM", 0.0)), 0.1)
@@ -974,13 +955,13 @@ elif page == "🔬  Yield Predictor":
         with cm3:
             price_gal  = st.slider("Price Per Gallon ($)", 0.0, 10.0, float(MEDIANS.get("Price_Per_Gallon", 2.5)), 0.1)
             govt_inc   = st.slider("Govt Incentive Score", 0.0, 10.0, float(MEDIANS.get("Govt_Incentive", 5.0)), 0.1)
-            source     = st.selectbox("Dataset Source", ["Clostridium_AK1_Lab_Data", "Bioethanol_Growth_Prediction_Dataset"], index=0)
+            source     = st.selectbox("Dataset Source", list(MAPPINGS["Dataset_Source"].keys()), index=0)
 
     st.markdown("<br>", unsafe_allow_html=True)
     col_btn, col_yield = st.columns([1, 2])
 
     with col_btn:
-        run_pred = st.button("[ predict yield ]", use_container_width=True)
+        run_pred = st.button("[ predict ethanol yield ]", use_container_width=True)
         st.markdown("""
         <div class="info-box">
             inference uses <strong>Random Forest</strong> — best model (highest R²) trained on
@@ -998,7 +979,6 @@ elif page == "🔬  Yield Predictor":
                 "LG_Ratio":                   lg_ratio,
                 "Phosphate_Concentration_mM": phosphate,
                 "Sugar_Consumed_pct":          sugar_pct,
-                "Ethanol_mM":                 ethanol,
                 "Acetate_mM":                 acetate,
                 "Butyrate_mM":                butyrate,
                 "1_2-PD_mM":                  MEDIANS.get("1_2-PD_mM", 0.0),
@@ -1008,7 +988,7 @@ elif page == "🔬  Yield Predictor":
                 "Final_pH":                   final_ph,
                 "1_2-PD_Yield_pct":           pdyield,
                 "Carbon_Balance_pct":         MEDIANS.get("Carbon_Balance_pct", 100.0),
-                "Microbial_Strain":           "Clostridium strain AK1",
+                "Microbial_Strain":           strain,
                 "Dataset_Source":             source,
                 "Year":                       year,
                 "Country":                    country,
@@ -1025,14 +1005,14 @@ elif page == "🔬  Yield Predictor":
                 "Price_Per_Gallon":           price_gal,
                 "Govt_Incentive":             govt_inc,
             }
-            pred = predict_yield(input_row)
+            pred = predict_ethanol(input_row)
 
             st.markdown(f"""
             <div class="yield-card fade-1">
                 <div style='font-family:"IBM Plex Mono",monospace; font-size:0.68rem;
                             color:#8fb8b3; text-transform:uppercase; letter-spacing:0.12em;
                             margin-bottom:0.8rem;'>prediction result</div>
-                {gauge_svg(pred, 50.0)}
+                {gauge_svg(pred, 500.0)}
             </div>
             """, unsafe_allow_html=True)
 
@@ -1055,7 +1035,7 @@ elif page == "🔬  Yield Predictor":
                 <div class="es-icon">🔬</div>
                 <div class="es-text">
                     set parameters and run<br>
-                    <span class="es-cmd">[ predict yield ]</span>
+                    <span class="es-cmd">[ predict ethanol yield ]</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -1067,7 +1047,7 @@ elif page == "🔬  Yield Predictor":
 elif page == "⚙️  Optimizer":
     st.markdown('<div class="section-header fade-1">Fermentation Optimizer</div>', unsafe_allow_html=True)
     st.markdown('<div class="section-underline"></div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-sub fade-2">differential evolution · global parameter search · maximum yield discovery</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-sub fade-2">differential evolution · global parameter search · maximum ethanol yield discovery</div>', unsafe_allow_html=True)
 
     NUMERIC_BOUNDS = {
         "Substrate_Concentration_mM": (1.0,   200.0),
@@ -1076,7 +1056,6 @@ elif page == "⚙️  Optimizer":
         "LG_Ratio":                   (0.01,  1.0),
         "Phosphate_Concentration_mM": (0.0,   100.0),
         "Sugar_Consumed_pct":         (0.0,   100.0),
-        "Ethanol_mM":                 (0.0,   100.0),
         "Acetate_mM":                 (0.0,   100.0),
         "Butyrate_mM":                (0.0,   50.0),
         "1_2-PD_mM":                  (0.0,   50.0),
@@ -1091,7 +1070,7 @@ elif page == "⚙️  Optimizer":
         "Temperature_C": "°C", "Initial_pH": "", "Final_pH": "",
         "Substrate_Concentration_mM": "mM", "LG_Ratio": "",
         "Phosphate_Concentration_mM": "mM", "Sugar_Consumed_pct": "%",
-        "Ethanol_mM": "mM", "Acetate_mM": "mM", "Butyrate_mM": "mM",
+        "Acetate_mM": "mM", "Butyrate_mM": "mM",
         "Lactate_mM": "mM", "H2_mM": "mM", "OD600": "",
         "1_2-PD_Yield_pct": "%", "Carbon_Balance_pct": "%",
     }
@@ -1104,7 +1083,8 @@ elif page == "⚙️  Optimizer":
         <div style='font-family:"DM Serif Display",serif; font-size:1rem;
                     color:#0d1f1e; margin-bottom:0.8rem;'>Configuration</div>
         """, unsafe_allow_html=True)
-        opt_substrate = st.selectbox("Substrate", ["D-Glucose", "Control", "L-Fucose", "L-Rhamnose"], index=0, key="opt_sub")
+        opt_strain    = st.selectbox("Strain to Optimize", list(MAPPINGS["Microbial_Strain"].keys()), index=0, key="opt_str")
+        opt_substrate = st.selectbox("Substrate", list(MAPPINGS["Substrate"].keys()), index=0, key="opt_sub")
         opt_country   = st.selectbox("Country", ["India", "Brazil", "China", "Germany", "USA"], index=0, key="opt_cou")
         opt_maxiter   = st.slider("DE Max Iterations", 50, 500, 150, 25)
         opt_popsize   = st.slider("Population Size", 5, 30, 12, 1)
@@ -1123,8 +1103,8 @@ elif page == "⚙️  Optimizer":
         if run_opt:
             fixed_cats = {
                 "Substrate":        MAPPINGS["Substrate"].get(opt_substrate, 0),
-                "Microbial_Strain": MAPPINGS["Microbial_Strain"].get("Clostridium strain AK1", 0),
-                "Dataset_Source":   MAPPINGS["Dataset_Source"].get("Clostridium_AK1_Lab_Data", 1),
+                "Microbial_Strain": MAPPINGS["Microbial_Strain"].get(opt_strain, 0),
+                "Dataset_Source":   MAPPINGS["Dataset_Source"].get("IMCTlab_Yeast_Data", 1),
                 "Country":          MAPPINGS["Country"].get(opt_country, 3),
             }
             opt_num_cols = [c for c in FEAT_COLS if c not in CAT_COLS and c in NUMERIC_BOUNDS]
@@ -1168,13 +1148,13 @@ elif page == "⚙️  Optimizer":
             r1, r2, r3 = st.columns(3)
             with r1:
                 st.markdown(f"""<div class="metric-card fade-1">
-                    <div class="label">Baseline Yield</div>
+                    <div class="label">Baseline Ethanol Yield (mM)</div>
                     <div class="value">{baseline_yield:.3f}</div>
                     <div class="sub">median conditions</div>
                 </div>""", unsafe_allow_html=True)
             with r2:
                 st.markdown(f"""<div class="metric-card fade-2">
-                    <div class="label">Optimised Yield</div>
+                    <div class="label">Optimised Ethanol Yield (mM)</div>
                     <div class="value">{best_yield:.3f}</div>
                     <div class="sub">DE best solution</div>
                 </div>""", unsafe_allow_html=True)
@@ -1198,7 +1178,7 @@ elif page == "⚙️  Optimizer":
                                    annotation_font=dict(color="#8fb8b3", family="IBM Plex Mono", size=10))
                 fig_conv.update_layout(
                     title=dict(text="convergence history", font=dict(family="IBM Plex Mono", size=11, color="#8fb8b3")),
-                    xaxis_title="generation", yaxis_title="predicted yield",
+                    xaxis_title="generation", yaxis_title="Predicted Ethanol Yield (mM)",
                     height=240, margin=dict(l=10, r=10, t=36, b=10),
                     **plotly_theme(),
                 )
@@ -1229,11 +1209,11 @@ elif page == "⚙️  Optimizer":
                     sym  = "→"
                     cls  = "val-same"
                 rows_html += f"""
-                <div class="param-row">
-                    <div class="param-name">{col.replace('_',' ')}</div>
-                    <div class="param-base">{bv:.3f} {unit}</div>
-                    <div class="param-opt {cls}">{sym} {ov:.3f} {unit}</div>
-                </div>"""
+<div class="param-row">
+    <div class="param-name">{col.replace('_',' ')}</div>
+    <div class="param-base">{bv:.3f} {unit}</div>
+    <div class="param-opt {cls}">{sym} {ov:.3f} {unit}</div>
+</div>"""
 
             st.markdown(f"""
             <div class="param-table">
@@ -1339,16 +1319,16 @@ elif page == "📊  Visualizations":
                 st.plotly_chart(fig_hist, use_container_width=True)
 
             with c_right:
-                if "Yield" in df_data.columns:
-                    sample_df = df_data[[sel_col, "Yield"]].dropna().sample(min(2000, len(df_data)))
+                if "Ethanol_mM" in df_data.columns:
+                    sample_df = df_data[[sel_col, "Ethanol_mM"]].dropna().sample(min(2000, len(df_data)))
                     fig_scatter = px.scatter(
-                        sample_df, x=sel_col, y="Yield",
+                        sample_df, x=sel_col, y="Ethanol_mM",
                         opacity=0.45, color_discrete_sequence=["#00e5cc"],
-                        title=f"{sel_col} vs yield",
+                        title=f"{sel_col} vs ethanol",
                     )
                     try:
-                        valid = sample_df[[sel_col, "Yield"]].dropna()
-                        z  = np.polyfit(valid[sel_col], valid["Yield"], 1)
+                        valid = sample_df[[sel_col, "Ethanol_mM"]].dropna()
+                        z  = np.polyfit(valid[sel_col], valid["Ethanol_mM"], 1)
                         p  = np.poly1d(z)
                         xs = np.linspace(valid[sel_col].min(), valid[sel_col].max(), 100)
                         fig_scatter.add_trace(go.Scatter(
@@ -1362,11 +1342,11 @@ elif page == "📊  Visualizations":
                                              showlegend=False, **plotly_theme())
                     st.plotly_chart(fig_scatter, use_container_width=True)
 
-            if "Substrate" in df_data.columns and "Yield" in df_data.columns:
+            if "Substrate" in df_data.columns and "Ethanol_mM" in df_data.columns:
                 fig_box = px.box(
-                    df_data, x="Substrate", y="Yield", color="Substrate",
+                    df_data, x="Substrate", y="Ethanol_mM", color="Substrate",
                     color_discrete_sequence=["#00e5cc", "#00b3a0", "#f59e0b", "#ef4444"],
-                    title="yield distribution by substrate",
+                    title="ethanol distribution by substrate",
                 )
                 fig_box.update_layout(height=320, margin=dict(l=10, r=10, t=40, b=10),
                                       showlegend=False, **plotly_theme())
@@ -1456,7 +1436,7 @@ elif page == "📋  Model Info":
             "scaler":               "StandardScaler",
             "imputer":              "median (via medians dict)",
             "categorical encoding": "label encoding (integer map)",
-            "target variable":      "Yield",
+            "target variable":      "Ethanol_mM",
             "train / test split":   "80% / 20%",
             "random state":         "42",
             "total features":       str(len(FEAT_COLS)),
@@ -1499,3 +1479,5 @@ elif page == "📋  Model Info":
             feat_rows.append({"feature": col, "type": ftype, "median": med_s, "importance": round(imp, 5)})
         df_feat = pd.DataFrame(feat_rows).sort_values("importance", ascending=False)
         st.dataframe(df_feat, use_container_width=True, hide_index=True, height=600)
+
+

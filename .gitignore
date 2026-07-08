@@ -149,3 +149,13 @@ feature_importance.png
 # Note: Keep the core dataset cleaned_fermentation_dataset.csv if needed,
 # but ignore scaled or duplicated datasets
 cleaned_fermentation_dataset_scaled.csv
+
+# Ignore large untracked data and binaries
+*.exe
+archive.zip
+archive/
+datasets.zip
+datasets/
+*strains.csv
+cleaned_fermentation_dataset_v2.csv
+
